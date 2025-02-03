@@ -24,7 +24,7 @@ paths:
   /users:
     get:
       tags:
-       - Users
+        - Users
       summary: Get users
       description: Returns a list of users.
       operationId: getUsers
@@ -36,14 +36,20 @@ paths:
               schema:
                 type: object
                 properties:
-                  users: 
+                  users:
                     type: array
                     items:
-                      $ref: '#/components/schemas/User'
+                      $ref: "#/components/schemas/User"
+                required: ["users"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
   /teams:
     get:
       tags:
-       - Teams
+        - Teams
       summary: Get teams
       description: Returns a list of teams.
       operationId: getTeams
@@ -55,14 +61,20 @@ paths:
               schema:
                 type: object
                 properties:
-                  teams: 
+                  teams:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Team'
+                      $ref: "#/components/schemas/Team"
+                required: ["teams"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
   /tournaments:
     get:
       tags:
-       - Tournaments
+        - Tournaments
       summary: Get tournaments
       description: Returns a list of tournaments.
       operationId: getTournaments
@@ -74,14 +86,20 @@ paths:
               schema:
                 type: object
                 properties:
-                  tournaments: 
+                  tournaments:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Tournament'
+                      $ref: "#/components/schemas/Tournament"
+                required: ["tournaments"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
   /tournaments/{tournamentId}/series:
     get:
       tags:
-       - Series
+        - Series
       summary: Get tournament series
       description: Returns a list of series for a tournament.
       operationId: getSeriesByTournamentId
@@ -92,6 +110,11 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
+            x-go-type: uuid.UUID
+            x-go-type-import:
+              path: github.com/google/uuid
+              name: uuid
       responses:
         "200": # status code
           description: OK
@@ -100,14 +123,20 @@ paths:
               schema:
                 type: object
                 properties:
-                  series: 
+                  series:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Series'
+                      $ref: "#/components/schemas/Series"
+                required: ["series"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
   /tournaments/{tournamentId}/games:
     get:
       tags:
-       - Games
+        - Games
       summary: Get games
       description: Returns a list of games for a tournament.
       operationId: getGamesByTournamentId
@@ -118,6 +147,11 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
+            x-go-type: uuid.UUID
+            x-go-type-import:
+              path: github.com/google/uuid
+              name: uuid
       responses:
         "200": # status code
           description: OK
@@ -126,14 +160,20 @@ paths:
               schema:
                 type: object
                 properties:
-                  games: 
+                  games:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Game'
+                      $ref: "#/components/schemas/Game"
+                required: ["games"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
   /series/{seriesId}:
     get:
       tags:
-       - Series
+        - Series
       summary: Get series
       description: Returns a list of series by ID.
       operationId: getSeriesById
@@ -144,6 +184,11 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
+            x-go-type: uuid.UUID
+            x-go-type-import:
+              path: github.com/google/uuid
+              name: uuid
       responses:
         "200": # status code
           description: OK
@@ -152,16 +197,22 @@ paths:
               schema:
                 type: object
                 properties:
-                  series: 
-                    $ref: '#/components/schemas/Series'
-                  games: 
+                  series:
+                    $ref: "#/components/schemas/Series"
+                  games:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Game'
+                      $ref: "#/components/schemas/Game"
+                required: ["series", "games"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
   /games/{gameId}:
     get:
       tags:
-       - Games
+        - Games
       summary: Get games
       description: Returns a game by ID.
       operationId: getGameById
@@ -172,78 +223,231 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
+            x-go-type: uuid.UUID
+            x-go-type-import:
+              path: github.com/google/uuid
+              name: uuid
       responses:
         "200": # status code
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Game'
+                type: object
+                properties:
+                  game:
+                    $ref: "#/components/schemas/Game"
+                required: ["game"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
 
 components:
   schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+      required:
+        - code
+        - message
     User:
       type: object
       properties:
         id:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-oapi-codegen-extra-tags:
+            gorm: primarykey
         name:
           type: string
         shortname:
           type: string
+      required:
+        - id
+        - name
+        - shortname
     Team:
       type: object
       properties:
         id:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-oapi-codegen-extra-tags:
+            gorm: primarykey
         name:
           type: string
         slug:
           type: string
+      required:
+        - id
+        - name
+        - slug
     Tournament:
       type: object
       properties:
         id:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-oapi-codegen-extra-tags:
+            gorm: primarykey
         name:
           type: string
+      required:
+        - id
+        - name
     Series:
       type: object
       properties:
         id:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-oapi-codegen-extra-tags:
+            gorm: primarykey
         tournamentId:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-oapi-codegen-extra-tags:
+            gorm: index
+        round:
+          description: round number that this series is a part of (0, 1, 2)
+          type: integer
         firstTeamId:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-go-type-skip-optional-pointer: true
         secondTeamId:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-go-type-skip-optional-pointer: true
         firstTeamUserId:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-go-type-skip-optional-pointer: true
         secondTeamUserId:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-go-type-skip-optional-pointer: true
         firstTeamScore:
           type: integer
         secondTeamScore:
           type: integer
+      required:
+        - id
+        - tournamentId
+        - round
     Game:
       type: object
       properties:
         id:
           type: string
-        tournamentId:
-          type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-oapi-codegen-extra-tags:
+            gorm: primarykey
         seriesId:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-oapi-codegen-extra-tags:
+            gorm: index
         homeTeamId:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-go-type-skip-optional-pointer: true
         awayTeamId:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-go-type-skip-optional-pointer: true
         homeTeamUserId:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-go-type-skip-optional-pointer: true
         awayTeamUserId:
           type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+            name: uuid
+          x-go-type-skip-optional-pointer: true
         homeTeamScore:
           type: integer
         awayTeamScore:
           type: integer
+      required:
+        - id
+        - tournamentId
+        - seriesId
+  responses:
+    BadRequest:
+      description: A client side bad request error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ServerError:
+      description: A server error occurred
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
