@@ -1,0 +1,249 @@
+openapi: 3.0.0
+info:
+  title: Tournaments API
+  description: API used by the frontend
+  version: 0.1.0
+
+servers:
+  - url: /api/v1
+    description: v1 api
+
+tags:
+  - name: Tournaments
+    description: Operations about tournaments
+  - name: Series
+    description: Operations about series
+  - name: Games
+    description: Operations about games
+  - name: Users
+    description: Operations about users
+  - name: Teams
+    description: Operations about teams
+
+paths:
+  /users:
+    get:
+      tags:
+       - Users
+      summary: Get users
+      description: Returns a list of users.
+      operationId: getUsers
+      responses:
+        "200": # status code
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users: 
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+  /teams:
+    get:
+      tags:
+       - Teams
+      summary: Get teams
+      description: Returns a list of teams.
+      operationId: getTeams
+      responses:
+        "200": # status code
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  teams: 
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Team'
+  /tournaments:
+    get:
+      tags:
+       - Tournaments
+      summary: Get tournaments
+      description: Returns a list of tournaments.
+      operationId: getTournaments
+      responses:
+        "200": # status code
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tournaments: 
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tournament'
+  /tournaments/{tournamentId}/series:
+    get:
+      tags:
+       - Series
+      summary: Get tournament series
+      description: Returns a list of series for a tournament.
+      operationId: getSeriesByTournamentId
+      parameters:
+        - name: tournamentId
+          in: path
+          description: ID of tournament to return
+          required: true
+          schema:
+            type: string
+      responses:
+        "200": # status code
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  series: 
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Series'
+  /tournaments/{tournamentId}/games:
+    get:
+      tags:
+       - Games
+      summary: Get games
+      description: Returns a list of games for a tournament.
+      operationId: getGamesByTournamentId
+      parameters:
+        - name: tournamentId
+          in: path
+          description: ID of tournament to return
+          required: true
+          schema:
+            type: string
+      responses:
+        "200": # status code
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  games: 
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Game'
+  /series/{seriesId}:
+    get:
+      tags:
+       - Series
+      summary: Get series
+      description: Returns a list of series by ID.
+      operationId: getSeriesById
+      parameters:
+        - name: seriesId
+          in: path
+          description: ID of series to return
+          required: true
+          schema:
+            type: string
+      responses:
+        "200": # status code
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  series: 
+                    $ref: '#/components/schemas/Series'
+                  games: 
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Game'
+  /games/{gameId}:
+    get:
+      tags:
+       - Games
+      summary: Get games
+      description: Returns a game by ID.
+      operationId: getGameById
+      parameters:
+        - name: gameId
+          in: path
+          description: ID of game to return
+          required: true
+          schema:
+            type: string
+      responses:
+        "200": # status code
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        shortname:
+          type: string
+    Team:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+    Tournament:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    Series:
+      type: object
+      properties:
+        id:
+          type: string
+        tournamentId:
+          type: string
+        firstTeamId:
+          type: string
+        secondTeamId:
+          type: string
+        firstTeamUserId:
+          type: string
+        secondTeamUserId:
+          type: string
+        firstTeamScore:
+          type: integer
+        secondTeamScore:
+          type: integer
+    Game:
+      type: object
+      properties:
+        id:
+          type: string
+        tournamentId:
+          type: string
+        seriesId:
+          type: string
+        homeTeamId:
+          type: string
+        awayTeamId:
+          type: string
+        homeTeamUserId:
+          type: string
+        awayTeamUserId:
+          type: string
+        homeTeamScore:
+          type: integer
+        awayTeamScore:
+          type: integer
