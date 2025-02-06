@@ -1,16 +1,24 @@
 import Grid from '@mui/material/Grid2';
 import { team } from '../types';
-import mtlLogo from '../assets/mtl.png';
 import Paper from '@mui/material/Paper';
 import { Typography } from '@mui/material';
+import Avatar from '@mui/material/Avatar';
 
 interface Props {
     size: string,
     team: team,
-    score: number,
+    score?: number,
 }
 
 function Team(props: Props) {
+    let logo = (
+        <Avatar variant="square" sx={{ objectFit: 'scale-down', height: "40px", width: "60px" }}>{props.team.name === 'TBD' ? '?' : props.team.name}</Avatar>
+    );
+    if (props.team.logo) {
+        logo = (
+            <Avatar variant="square" alt={props.team.name} src={props.team.logo} sx={{ objectFit: 'scale-down', height: "40px", width: "60px" }} />
+        );
+    }
     return (
         <Paper elevation={0} sx={{
             paddingRight: '.5em',
@@ -18,14 +26,14 @@ function Team(props: Props) {
         }}>
             <Grid spacing={1} container>
                 <Grid display="flex" justifyContent="center" alignItems="center">
-                    <img src={mtlLogo} style={{ height: '2em', textAlign: 'center' }} />
+                    {logo}
                 </Grid>
                 <Grid display="flex" justifyContent="center" alignItems="center">
                     <Grid container>
                         <Grid display="flex" justifyContent="center" alignItems="center">
                             <Typography variant="subtitle1" sx={{
                                 fontSize: props.size === 'lg' ? '3em' : '1em',
-                            }}>{props.score}</Typography>
+                            }}>{props.score ?? '-'}</Typography>
                         </Grid>
                         <Grid sx={{
                             paddingLeft: '.5em',

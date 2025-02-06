@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:api": "openapi-typescript ./openapi.yaml -o ./src/api.generated.d.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -15,6 +16,8 @@
     "@fontsource/roboto": "^5.1.1",
     "@mui/icons-material": "^6.4.2",
     "@mui/material": "^6.4.2",
+    "openapi-fetch": "^0.13.4",
+    "openapi-typescript": "^7.6.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router": "^7.1.5"

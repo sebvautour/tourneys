@@ -16,6 +16,7 @@ interface Props {
     title?: string
     series: series
     stats?: gameStats
+    hideActions?: boolean
 }
 
 function GameSeries(props: Props) {
@@ -55,6 +56,18 @@ function GameSeries(props: Props) {
             </Grid>
         )
     }
+
+    let actions = (
+        <CardActions sx={{
+            padding: 0,
+        }}>
+            <Button href={`/series/${props.series.id}`}><BarChartIcon /></Button>
+        </CardActions>
+    );
+    if (props.hideActions) {
+        actions = <></>;
+    }
+
     return (
         <Card variant='outlined'>
             {title}
@@ -74,11 +87,7 @@ function GameSeries(props: Props) {
                     </Grid>
                 </Grid>
             </CardContent>
-            <CardActions sx={{
-                padding: 0,
-            }}>
-                <Button><BarChartIcon /></Button>
-            </CardActions>
+            {actions}
         </Card>
     );
 }

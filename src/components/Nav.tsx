@@ -4,20 +4,22 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 
+interface Props {
+    tournamentName: string
+}
 
-function Nav() {
+function Nav(props: Props) {
     return (
-        <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="static">
+        <Box sx={{ flexGrow: 1, paddingBottom: '1em' }}>
+            <AppBar position="static" color='primary' enableColorOnDark>
                 <Toolbar>
                     <Box>
-                        <Button variant="text" href='/' color='secondary'>Overview</Button>
-                        <Button variant="text" href='/games' color='secondary'>Games</Button>
+                        <Button variant="text" href='/' color='inherit'>Overview</Button>
                     </Box>
-                    <Typography variant="h6" component="div" sx={{ flexGrow: 1, textAlign: 'center' }}>
-                        Hockey Tournament
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1, textAlign: 'center' }} >
+                        {props.tournamentName}
                     </Typography>
-                    <Button color="inherit">Login</Button>
+                    <Button color='inherit'>Login</Button>
                 </Toolbar>
             </AppBar>
         </Box>

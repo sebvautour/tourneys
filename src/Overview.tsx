@@ -1,12 +1,11 @@
-import NowPlaying from './components/NowPlaying';
 import TournamentChart from './components/TournamentChart';
+import { Props } from './components/TournamentChart';
 
-function Home() {
+function Home(props: Props) {
 
   return (
     <>
-      <NowPlaying />
-      <TournamentChart />
+      <TournamentChart {...props} />
     </>
   )
 }

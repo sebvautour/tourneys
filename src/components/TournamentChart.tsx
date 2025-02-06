@@ -1,58 +1,60 @@
+import { useState, useEffect } from "react";
 import GameSeries from "./GameSeries";
 import Grid from '@mui/material/Grid2';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { series } from "../types";
 import { SxProps } from "@mui/material";
+import type { components } from '../api.generated';
+import apiClient from "../apiClient";
+import { Typography } from '@mui/material';
 
-function TournamentChart() {
-    const quarterFinals: series[] = [
-        {
-            teamA: { name: "MTL", coach: "Play1", logo: "TODO" },
-            teamAScore: 3,
-            teamB: { name: "VAN", coach: "Play2", logo: "TODO" },
-            teamBScore: 2,
-        },
-        {
-            teamA: { name: "OTT", coach: "Play1", logo: "TODO" },
-            teamAScore: 2,
-            teamB: { name: "TOR", coach: "Play2", logo: "TODO" },
-            teamBScore: 3,
-        },
-        {
-            teamA: { name: "EDM", coach: "Play1", logo: "TODO" },
-            teamAScore: 3,
-            teamB: { name: "CAG", coach: "Play2", logo: "TODO" },
-            teamBScore: 2,
-        },
-        {
-            teamA: { name: "WIN", coach: "Play1", logo: "TODO" },
-            teamAScore: 2,
-            teamB: { name: "BOS", coach: "Play2", logo: "TODO" },
-            teamBScore: 3,
-        },
-    ];
-    const semiFinals: series[] = [
-        {
-            teamA: { name: "MTL", coach: "Play1", logo: "TODO" },
-            teamAScore: 3,
-            teamB: { name: "TOR", coach: "Play2", logo: "TODO" },
-            teamBScore: 2,
-        },
-        {
-            teamA: { name: "CAG", coach: "Play1", logo: "TODO" },
-            teamAScore: 2,
-            teamB: { name: "BOS", coach: "Play2", logo: "TODO" },
-            teamBScore: 3,
+
+export interface Props {
+    tournamentId: string
+    users: components["schemas"]["User"][]
+    teams: components["schemas"]["Team"][]
+}
+
+function TournamentChart(props: Props) {
+    const [series, setSeries] = useState([] as series[]);
+
+    const client = apiClient;
+
+    const fetchSeries = async () => {
+        const { data: seriesData, error: seriesError } = await client.GET("/tournaments/{tournamentId}/series", {
+            params: {
+                path: { tournamentId: props.tournamentId },
+            },
+        });
+        if (seriesError) {
+            console.log(seriesError);
+            return;
         }
-    ];
-    const finals: series[] = [
-        {
-            teamA: { name: "MTL", coach: "Play1", logo: "TODO" },
-            teamAScore: 2,
-            teamB: { name: "BOS", coach: "Play2", logo: "TODO" },
-            teamBScore: 3,
-        }
-    ];
+
+        setSeries(seriesData.series.map((s) => ({
+            id: s.id,
+            round: s.round,
+            teamA: {
+                id: s.firstTeamId ?? '',
+                name: props.teams.filter((v) => v.id === s.firstTeamId)[0]?.slug ?? 'TBD',
+                coach: props.users.filter((v) => v.id === s.firstTeamUserId)[0]?.shortname ?? 'TBD',
+                logo: "",
+            },
+            teamAScore: s.firstTeamScore,
+            teamB: {
+                id: s.secondTeamId ?? '',
+                name: props.teams.filter((v) => v.id === s.secondTeamId)[0]?.slug ?? 'TBD',
+                coach: props.users.filter((v) => v.id === s.secondTeamUserId)[0]?.shortname ?? 'TBD',
+                logo: "",
+            },
+            teamBScore: s.secondTeamScore,
+        })))
+    }
+
+    useEffect(() => {
+        fetchSeries()
+    }, []);
+
 
     const rowStyle: SxProps = {
         height: "100%",
@@ -60,64 +62,50 @@ function TournamentChart() {
         alignItems: "center",
     }
 
-    const quarterFinalsRow = (
-        <Grid container direction="column" sx={rowStyle} spacing={2}>
-            {quarterFinals.map((series) => (
-                <Grid >
-                    <GameSeries series={series} size="sm" />
+    let columns = [];
+    // create a column for each round
+    // 0 - quarter finals
+    // 1 - semi finals
+    // 2 - finals
+    for (let i = 0; i < 3; i++) {
+        columns.push(
+            <Grid size={3} key={'round-' + i}>
+                <Typography variant="h6" sx={{ textAlign: 'center' }}>{i === 0 ? 'Quarter Finals' : (i === 1 ? "Semi Finals" : "Finals")}</Typography>
+                <Grid container direction="column" sx={rowStyle} spacing={2}>
+                    {series.filter((v) => v.round === i).map((series) => (
+                        <Grid key={series.id}>
+                            <GameSeries series={series} size="sm" />
+                        </Grid>
+                    ))}
                 </Grid>
-            ))}
-        </Grid>
-    );
+            </Grid>
+        )
 
-    const semiFinalsRow = (
-        <Grid container direction="column" sx={rowStyle} spacing={2}>
-            {semiFinals.map((series) => (
-                <Grid >
-                    <GameSeries series={series} size="sm" />
+        // add arrows for half the amount of 
+        let arrows = [];
+        for (let a = 0; a < Math.floor(series.filter((v) => v.round === i).length / 2); a++) {
+            arrows.push(
+                <Grid key={i + '-' + a}>
+                    <ArrowForwardIosIcon />
                 </Grid>
-            ))}
-        </Grid>
-    );
+            );
 
-    const finalsRow = (
-        <Grid container direction="column" sx={rowStyle} spacing={2}>
-            {finals.map((series) => (
-                <Grid >
-                    <GameSeries series={series} size="sm" />
+        }
+        if (arrows.length !== 0) {
+            columns.push(
+                <Grid size={1} key={'round-arrows-' + i}>
+                    <Grid container direction="column" sx={rowStyle} spacing={2}>
+                        {arrows}
+                    </Grid>
                 </Grid>
-            ))}
-        </Grid>
-    );
+            )
+        }
+
+    }
 
     return (
         <Grid container >
-            <Grid size={3}>
-                {quarterFinalsRow}
-            </Grid>
-            <Grid size={1}>
-                <Grid container direction="column" sx={rowStyle} spacing={2}>
-                    <Grid>
-                        <ArrowForwardIosIcon />
-                    </Grid>
-                    <Grid>
-                        <ArrowForwardIosIcon />
-                    </Grid>
-                </Grid>
-            </Grid>
-            <Grid size={3}>
-                {semiFinalsRow}
-            </Grid>
-            <Grid size={1}>
-                <Grid container direction="column" sx={rowStyle} spacing={2}>
-                    <Grid>
-                        <ArrowForwardIosIcon />
-                    </Grid>
-                </Grid>
-            </Grid>
-            <Grid size={3}>
-                {finalsRow}
-            </Grid>
+            {columns}
         </Grid>
     )
 }
