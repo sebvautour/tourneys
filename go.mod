@@ -5,6 +5,7 @@ go 1.23.5
 require (
 	github.com/google/uuid v1.6.0
 	github.com/oapi-codegen/runtime v1.1.1
+	github.com/rs/cors v1.11.1
 	gorm.io/driver/sqlite v1.5.7
 	gorm.io/gorm v1.25.12
 )

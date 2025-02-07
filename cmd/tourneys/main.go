@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/rs/cors"
 	"github.com/sebvautour/tourneys"
 	"github.com/sebvautour/tourneys/internal/api"
 	"github.com/sebvautour/tourneys/internal/db"
@@ -34,7 +35,7 @@ func main() {
 	})
 
 	webserver := &http.Server{
-		Handler: mux,
+		Handler: cors.Default().Handler(mux),
 		Addr:    "0.0.0.0:8080",
 	}
 
