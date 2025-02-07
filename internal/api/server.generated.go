@@ -75,17 +75,50 @@ type BadRequest = Error
 // ServerError defines model for ServerError.
 type ServerError = Error
 
+// CreateGameJSONRequestBody defines body for CreateGame for application/json ContentType.
+type CreateGameJSONRequestBody = Game
+
+// UpdateGameByIdJSONRequestBody defines body for UpdateGameById for application/json ContentType.
+type UpdateGameByIdJSONRequestBody = Game
+
+// CreateSeriesJSONRequestBody defines body for CreateSeries for application/json ContentType.
+type CreateSeriesJSONRequestBody = Series
+
+// UpdateSeriesByIdJSONRequestBody defines body for UpdateSeriesById for application/json ContentType.
+type UpdateSeriesByIdJSONRequestBody = Series
+
+// CreateTeamJSONRequestBody defines body for CreateTeam for application/json ContentType.
+type CreateTeamJSONRequestBody = Team
+
+// CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
+type CreateUserJSONRequestBody = User
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Create game
+	// (POST /games)
+	CreateGame(w http.ResponseWriter, r *http.Request)
 	// Get games
 	// (GET /games/{gameId})
 	GetGameById(w http.ResponseWriter, r *http.Request, gameId uuid.UUID)
+	// Update an existing game
+	// (PUT /games/{gameId})
+	UpdateGameById(w http.ResponseWriter, r *http.Request, gameId uuid.UUID)
+	// Create series
+	// (POST /series)
+	CreateSeries(w http.ResponseWriter, r *http.Request)
 	// Get series
 	// (GET /series/{seriesId})
 	GetSeriesById(w http.ResponseWriter, r *http.Request, seriesId uuid.UUID)
+	// Update series
+	// (PUT /series/{seriesId})
+	UpdateSeriesById(w http.ResponseWriter, r *http.Request, seriesId uuid.UUID)
 	// Get teams
 	// (GET /teams)
 	GetTeams(w http.ResponseWriter, r *http.Request)
+	// Create team
+	// (POST /teams)
+	CreateTeam(w http.ResponseWriter, r *http.Request)
 	// Get tournaments
 	// (GET /tournaments)
 	GetTournaments(w http.ResponseWriter, r *http.Request)
@@ -98,6 +131,9 @@ type ServerInterface interface {
 	// Get users
 	// (GET /users)
 	GetUsers(w http.ResponseWriter, r *http.Request)
+	// Create user
+	// (POST /users)
+	CreateUser(w http.ResponseWriter, r *http.Request)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -108,6 +144,20 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// CreateGame operation middleware
+func (siw *ServerInterfaceWrapper) CreateGame(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateGame(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // GetGameById operation middleware
 func (siw *ServerInterfaceWrapper) GetGameById(w http.ResponseWriter, r *http.Request) {
@@ -125,6 +175,45 @@ func (siw *ServerInterfaceWrapper) GetGameById(w http.ResponseWriter, r *http.Re
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetGameById(w, r, gameId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateGameById operation middleware
+func (siw *ServerInterfaceWrapper) UpdateGameById(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "gameId" -------------
+	var gameId uuid.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "gameId", r.PathValue("gameId"), &gameId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "gameId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateGameById(w, r, gameId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateSeries operation middleware
+func (siw *ServerInterfaceWrapper) CreateSeries(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateSeries(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -159,11 +248,50 @@ func (siw *ServerInterfaceWrapper) GetSeriesById(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// UpdateSeriesById operation middleware
+func (siw *ServerInterfaceWrapper) UpdateSeriesById(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "seriesId" -------------
+	var seriesId uuid.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "seriesId", r.PathValue("seriesId"), &seriesId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "seriesId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateSeriesById(w, r, seriesId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetTeams operation middleware
 func (siw *ServerInterfaceWrapper) GetTeams(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetTeams(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateTeam operation middleware
+func (siw *ServerInterfaceWrapper) CreateTeam(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateTeam(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -242,6 +370,20 @@ func (siw *ServerInterfaceWrapper) GetUsers(w http.ResponseWriter, r *http.Reque
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetUsers(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateUser operation middleware
+func (siw *ServerInterfaceWrapper) CreateUser(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateUser(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -371,13 +513,19 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	m.HandleFunc("POST "+options.BaseURL+"/games", wrapper.CreateGame)
 	m.HandleFunc("GET "+options.BaseURL+"/games/{gameId}", wrapper.GetGameById)
+	m.HandleFunc("PUT "+options.BaseURL+"/games/{gameId}", wrapper.UpdateGameById)
+	m.HandleFunc("POST "+options.BaseURL+"/series", wrapper.CreateSeries)
 	m.HandleFunc("GET "+options.BaseURL+"/series/{seriesId}", wrapper.GetSeriesById)
+	m.HandleFunc("PUT "+options.BaseURL+"/series/{seriesId}", wrapper.UpdateSeriesById)
 	m.HandleFunc("GET "+options.BaseURL+"/teams", wrapper.GetTeams)
+	m.HandleFunc("POST "+options.BaseURL+"/teams", wrapper.CreateTeam)
 	m.HandleFunc("GET "+options.BaseURL+"/tournaments", wrapper.GetTournaments)
 	m.HandleFunc("GET "+options.BaseURL+"/tournaments/{tournamentId}/games", wrapper.GetGamesByTournamentId)
 	m.HandleFunc("GET "+options.BaseURL+"/tournaments/{tournamentId}/series", wrapper.GetSeriesByTournamentId)
 	m.HandleFunc("GET "+options.BaseURL+"/users", wrapper.GetUsers)
+	m.HandleFunc("POST "+options.BaseURL+"/users", wrapper.CreateUser)
 
 	return m
 }
@@ -385,6 +533,43 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 type BadRequestJSONResponse Error
 
 type ServerErrorJSONResponse Error
+
+type CreateGameRequestObject struct {
+	Body *CreateGameJSONRequestBody
+}
+
+type CreateGameResponseObject interface {
+	VisitCreateGameResponse(w http.ResponseWriter) error
+}
+
+type CreateGame201JSONResponse struct {
+	Game Game `json:"game"`
+}
+
+func (response CreateGame201JSONResponse) VisitCreateGameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateGame400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CreateGame400JSONResponse) VisitCreateGameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateGame500JSONResponse struct{ ServerErrorJSONResponse }
+
+func (response CreateGame500JSONResponse) VisitCreateGameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
 
 type GetGameByIdRequestObject struct {
 	GameId uuid.UUID `json:"gameId"`
@@ -417,6 +602,81 @@ func (response GetGameById400JSONResponse) VisitGetGameByIdResponse(w http.Respo
 type GetGameById500JSONResponse struct{ ServerErrorJSONResponse }
 
 func (response GetGameById500JSONResponse) VisitGetGameByIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateGameByIdRequestObject struct {
+	GameId uuid.UUID `json:"gameId"`
+	Body   *UpdateGameByIdJSONRequestBody
+}
+
+type UpdateGameByIdResponseObject interface {
+	VisitUpdateGameByIdResponse(w http.ResponseWriter) error
+}
+
+type UpdateGameById200JSONResponse struct {
+	Game Game `json:"game"`
+}
+
+func (response UpdateGameById200JSONResponse) VisitUpdateGameByIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateGameById400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response UpdateGameById400JSONResponse) VisitUpdateGameByIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateGameById500JSONResponse struct{ ServerErrorJSONResponse }
+
+func (response UpdateGameById500JSONResponse) VisitUpdateGameByIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSeriesRequestObject struct {
+	Body *CreateSeriesJSONRequestBody
+}
+
+type CreateSeriesResponseObject interface {
+	VisitCreateSeriesResponse(w http.ResponseWriter) error
+}
+
+type CreateSeries201JSONResponse struct {
+	Series Series `json:"series"`
+}
+
+func (response CreateSeries201JSONResponse) VisitCreateSeriesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSeries400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CreateSeries400JSONResponse) VisitCreateSeriesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSeries500JSONResponse struct{ ServerErrorJSONResponse }
+
+func (response CreateSeries500JSONResponse) VisitCreateSeriesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -461,6 +721,44 @@ func (response GetSeriesById500JSONResponse) VisitGetSeriesByIdResponse(w http.R
 	return json.NewEncoder(w).Encode(response)
 }
 
+type UpdateSeriesByIdRequestObject struct {
+	SeriesId uuid.UUID `json:"seriesId"`
+	Body     *UpdateSeriesByIdJSONRequestBody
+}
+
+type UpdateSeriesByIdResponseObject interface {
+	VisitUpdateSeriesByIdResponse(w http.ResponseWriter) error
+}
+
+type UpdateSeriesById200JSONResponse struct {
+	Series Series `json:"series"`
+}
+
+func (response UpdateSeriesById200JSONResponse) VisitUpdateSeriesByIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateSeriesById400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response UpdateSeriesById400JSONResponse) VisitUpdateSeriesByIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateSeriesById500JSONResponse struct{ ServerErrorJSONResponse }
+
+func (response UpdateSeriesById500JSONResponse) VisitUpdateSeriesByIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetTeamsRequestObject struct {
 }
 
@@ -491,6 +789,43 @@ func (response GetTeams400JSONResponse) VisitGetTeamsResponse(w http.ResponseWri
 type GetTeams500JSONResponse struct{ ServerErrorJSONResponse }
 
 func (response GetTeams500JSONResponse) VisitGetTeamsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateTeamRequestObject struct {
+	Body *CreateTeamJSONRequestBody
+}
+
+type CreateTeamResponseObject interface {
+	VisitCreateTeamResponse(w http.ResponseWriter) error
+}
+
+type CreateTeam201JSONResponse struct {
+	Team Team `json:"team"`
+}
+
+func (response CreateTeam201JSONResponse) VisitCreateTeamResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateTeam400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CreateTeam400JSONResponse) VisitCreateTeamResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateTeam500JSONResponse struct{ ServerErrorJSONResponse }
+
+func (response CreateTeam500JSONResponse) VisitCreateTeamResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -643,17 +978,69 @@ func (response GetUsers500JSONResponse) VisitGetUsersResponse(w http.ResponseWri
 	return json.NewEncoder(w).Encode(response)
 }
 
+type CreateUserRequestObject struct {
+	Body *CreateUserJSONRequestBody
+}
+
+type CreateUserResponseObject interface {
+	VisitCreateUserResponse(w http.ResponseWriter) error
+}
+
+type CreateUser201JSONResponse struct {
+	User User `json:"user"`
+}
+
+func (response CreateUser201JSONResponse) VisitCreateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateUser400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CreateUser400JSONResponse) VisitCreateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateUser500JSONResponse struct{ ServerErrorJSONResponse }
+
+func (response CreateUser500JSONResponse) VisitCreateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// Create game
+	// (POST /games)
+	CreateGame(ctx context.Context, request CreateGameRequestObject) (CreateGameResponseObject, error)
 	// Get games
 	// (GET /games/{gameId})
 	GetGameById(ctx context.Context, request GetGameByIdRequestObject) (GetGameByIdResponseObject, error)
+	// Update an existing game
+	// (PUT /games/{gameId})
+	UpdateGameById(ctx context.Context, request UpdateGameByIdRequestObject) (UpdateGameByIdResponseObject, error)
+	// Create series
+	// (POST /series)
+	CreateSeries(ctx context.Context, request CreateSeriesRequestObject) (CreateSeriesResponseObject, error)
 	// Get series
 	// (GET /series/{seriesId})
 	GetSeriesById(ctx context.Context, request GetSeriesByIdRequestObject) (GetSeriesByIdResponseObject, error)
+	// Update series
+	// (PUT /series/{seriesId})
+	UpdateSeriesById(ctx context.Context, request UpdateSeriesByIdRequestObject) (UpdateSeriesByIdResponseObject, error)
 	// Get teams
 	// (GET /teams)
 	GetTeams(ctx context.Context, request GetTeamsRequestObject) (GetTeamsResponseObject, error)
+	// Create team
+	// (POST /teams)
+	CreateTeam(ctx context.Context, request CreateTeamRequestObject) (CreateTeamResponseObject, error)
 	// Get tournaments
 	// (GET /tournaments)
 	GetTournaments(ctx context.Context, request GetTournamentsRequestObject) (GetTournamentsResponseObject, error)
@@ -666,6 +1053,9 @@ type StrictServerInterface interface {
 	// Get users
 	// (GET /users)
 	GetUsers(ctx context.Context, request GetUsersRequestObject) (GetUsersResponseObject, error)
+	// Create user
+	// (POST /users)
+	CreateUser(ctx context.Context, request CreateUserRequestObject) (CreateUserResponseObject, error)
 }
 
 type StrictHandlerFunc = strictnethttp.StrictHTTPHandlerFunc
@@ -697,6 +1087,37 @@ type strictHandler struct {
 	options     StrictHTTPServerOptions
 }
 
+// CreateGame operation middleware
+func (sh *strictHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
+	var request CreateGameRequestObject
+
+	var body CreateGameJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateGame(ctx, request.(CreateGameRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateGame")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateGameResponseObject); ok {
+		if err := validResponse.VisitCreateGameResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetGameById operation middleware
 func (sh *strictHandler) GetGameById(w http.ResponseWriter, r *http.Request, gameId uuid.UUID) {
 	var request GetGameByIdRequestObject
@@ -716,6 +1137,70 @@ func (sh *strictHandler) GetGameById(w http.ResponseWriter, r *http.Request, gam
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetGameByIdResponseObject); ok {
 		if err := validResponse.VisitGetGameByIdResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateGameById operation middleware
+func (sh *strictHandler) UpdateGameById(w http.ResponseWriter, r *http.Request, gameId uuid.UUID) {
+	var request UpdateGameByIdRequestObject
+
+	request.GameId = gameId
+
+	var body UpdateGameByIdJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateGameById(ctx, request.(UpdateGameByIdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateGameById")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateGameByIdResponseObject); ok {
+		if err := validResponse.VisitUpdateGameByIdResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateSeries operation middleware
+func (sh *strictHandler) CreateSeries(w http.ResponseWriter, r *http.Request) {
+	var request CreateSeriesRequestObject
+
+	var body CreateSeriesJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateSeries(ctx, request.(CreateSeriesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateSeries")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateSeriesResponseObject); ok {
+		if err := validResponse.VisitCreateSeriesResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -749,6 +1234,39 @@ func (sh *strictHandler) GetSeriesById(w http.ResponseWriter, r *http.Request, s
 	}
 }
 
+// UpdateSeriesById operation middleware
+func (sh *strictHandler) UpdateSeriesById(w http.ResponseWriter, r *http.Request, seriesId uuid.UUID) {
+	var request UpdateSeriesByIdRequestObject
+
+	request.SeriesId = seriesId
+
+	var body UpdateSeriesByIdJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateSeriesById(ctx, request.(UpdateSeriesByIdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateSeriesById")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateSeriesByIdResponseObject); ok {
+		if err := validResponse.VisitUpdateSeriesByIdResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetTeams operation middleware
 func (sh *strictHandler) GetTeams(w http.ResponseWriter, r *http.Request) {
 	var request GetTeamsRequestObject
@@ -766,6 +1284,37 @@ func (sh *strictHandler) GetTeams(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetTeamsResponseObject); ok {
 		if err := validResponse.VisitGetTeamsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateTeam operation middleware
+func (sh *strictHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
+	var request CreateTeamRequestObject
+
+	var body CreateTeamJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateTeam(ctx, request.(CreateTeamRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateTeam")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateTeamResponseObject); ok {
+		if err := validResponse.VisitCreateTeamResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -866,6 +1415,37 @@ func (sh *strictHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetUsersResponseObject); ok {
 		if err := validResponse.VisitGetUsersResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateUser operation middleware
+func (sh *strictHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	var request CreateUserRequestObject
+
+	var body CreateUserJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateUser(ctx, request.(CreateUserRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateUser")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateUserResponseObject); ok {
+		if err := validResponse.VisitCreateUserResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

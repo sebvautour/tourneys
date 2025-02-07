@@ -5,8 +5,8 @@ info:
   version: 0.1.0
 
 servers:
-  - url: /api/v1
-    description: v1 api
+  - url: "http://localhost:8080/api/v1"
+    description: local development testing
 
 tags:
   - name: Tournaments
@@ -22,6 +22,35 @@ tags:
 
 paths:
   /users:
+    post:
+      tags:
+        - Users
+      summary: Create user
+      description: Create a user
+      operationId: createUser
+      requestBody:
+        description: Create a new user
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+                required: ["user"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
     get:
       tags:
         - Users
@@ -29,7 +58,7 @@ paths:
       description: Returns a list of users.
       operationId: getUsers
       responses:
-        "200": # status code
+        "200":
           description: OK
           content:
             application/json:
@@ -47,6 +76,35 @@ paths:
           $ref: "#/components/responses/ServerError"
 
   /teams:
+    post:
+      tags:
+        - Teams
+      summary: Create team
+      description: Create a team
+      operationId: createTeam
+      requestBody:
+        description: Create a new team
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Team"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  team:
+                    $ref: "#/components/schemas/Team"
+                required: ["team"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
     get:
       tags:
         - Teams
@@ -54,7 +112,7 @@ paths:
       description: Returns a list of teams.
       operationId: getTeams
       responses:
-        "200": # status code
+        "200":
           description: OK
           content:
             application/json:
@@ -79,7 +137,7 @@ paths:
       description: Returns a list of tournaments.
       operationId: getTournaments
       responses:
-        "200": # status code
+        "200":
           description: OK
           content:
             application/json:
@@ -106,7 +164,7 @@ paths:
       parameters:
         - name: tournamentId
           in: path
-          description: ID of tournament to return
+          description: ID of tournament
           required: true
           schema:
             type: string
@@ -116,7 +174,7 @@ paths:
               path: github.com/google/uuid
               name: uuid
       responses:
-        "200": # status code
+        "200":
           description: OK
           content:
             application/json:
@@ -143,7 +201,7 @@ paths:
       parameters:
         - name: tournamentId
           in: path
-          description: ID of tournament to return
+          description: ID of tournament
           required: true
           schema:
             type: string
@@ -153,7 +211,7 @@ paths:
               path: github.com/google/uuid
               name: uuid
       responses:
-        "200": # status code
+        "200":
           description: OK
           content:
             application/json:
@@ -170,6 +228,36 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
+  /series:
+    post:
+      tags:
+        - Series
+      summary: Create series
+      description: Create a series
+      operationId: createSeries
+      requestBody:
+        description: Create a new series
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Series"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  series:
+                    $ref: "#/components/schemas/Series"
+                required: ["series"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
   /series/{seriesId}:
     get:
       tags:
@@ -180,7 +268,7 @@ paths:
       parameters:
         - name: seriesId
           in: path
-          description: ID of series to return
+          description: ID of series
           required: true
           schema:
             type: string
@@ -190,7 +278,7 @@ paths:
               path: github.com/google/uuid
               name: uuid
       responses:
-        "200": # status code
+        "200":
           description: OK
           content:
             application/json:
@@ -208,6 +296,75 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "500":
           $ref: "#/components/responses/ServerError"
+    put:
+      tags:
+        - Series
+      summary: Update series
+      description: Update an existing series
+      operationId: updateSeriesById
+      parameters:
+        - name: seriesId
+          in: path
+          description: ID of series
+          required: true
+          schema:
+            type: string
+            format: uuid
+            x-go-type: uuid.UUID
+            x-go-type-import:
+              path: github.com/google/uuid
+              name: uuid
+      requestBody:
+        description: Update an existing series
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Series"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  series:
+                    $ref: "#/components/schemas/Series"
+                required: ["series"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /games:
+    post:
+      tags:
+        - Games
+      summary: Create game
+      description: Create a game
+      operationId: createGame
+      requestBody:
+        description: Create a new game
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Game"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  game:
+                    $ref: "#/components/schemas/Game"
+                required: ["game"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
 
   /games/{gameId}:
     get:
@@ -219,7 +376,7 @@ paths:
       parameters:
         - name: gameId
           in: path
-          description: ID of game to return
+          description: ID of game
           required: true
           schema:
             type: string
@@ -229,7 +386,47 @@ paths:
               path: github.com/google/uuid
               name: uuid
       responses:
-        "200": # status code
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  game:
+                    $ref: "#/components/schemas/Game"
+                required: ["game"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    put:
+      tags:
+        - Games
+      summary: Update an existing game
+      description: Update an existing game
+      operationId: updateGameById
+      parameters:
+        - name: gameId
+          in: path
+          description: ID of game
+          required: true
+          schema:
+            type: string
+            format: uuid
+            x-go-type: uuid.UUID
+            x-go-type-import:
+              path: github.com/google/uuid
+              name: uuid
+      requestBody:
+        description: Update an existing game
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Game"
+        required: true
+      responses:
+        "200":
           description: OK
           content:
             application/json:

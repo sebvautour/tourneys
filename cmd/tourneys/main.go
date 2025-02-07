@@ -35,8 +35,11 @@ func main() {
 	})
 
 	webserver := &http.Server{
-		Handler: cors.Default().Handler(mux),
-		Addr:    "0.0.0.0:8080",
+		Handler: cors.New(cors.Options{
+			AllowedOrigins: []string{"*"},
+			AllowedMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost},
+		}).Handler(mux),
+		Addr: "0.0.0.0:8080",
 	}
 
 	log.Fatalln(webserver.ListenAndServe())

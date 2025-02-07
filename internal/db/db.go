@@ -100,12 +100,22 @@ func (db *DB) SeriesById(ctx context.Context, Id uuid.UUID) (res *api.Series, _ 
 		Error
 }
 
+func (db *DB) UpdateSeriesById(ctx context.Context, Id uuid.UUID, s api.Series) error {
+	s.Id = Id
+	return db.Conn.WithContext(ctx).Save(&s).Error
+}
+
 func (db *DB) CreateGame(ctx context.Context, t api.Game) (*api.Game, error) {
 	t.Id = uuid.New()
 	if err := db.Conn.WithContext(ctx).Create(&t).Error; err != nil {
 		return nil, err
 	}
 	return &t, nil
+}
+
+func (db *DB) UpdateGameById(ctx context.Context, Id uuid.UUID, g api.Game) error {
+	g.Id = Id
+	return db.Conn.WithContext(ctx).Save(&g).Error
 }
 
 func (db *DB) GameById(ctx context.Context, Id uuid.UUID) (res *api.Game, _ error) {
