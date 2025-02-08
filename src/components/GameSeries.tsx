@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@mui/material';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
@@ -6,20 +7,41 @@ import CardHeader from '@mui/material/CardHeader';
 import Grid from '@mui/material/Grid2';
 import Team from './Team';
 import BarChartIcon from '@mui/icons-material/BarChart';
-import { series, gameStats } from '../types';
+import EditIcon from '@mui/icons-material/Edit';
+import { gameStats } from '../types';
 import Table from '@mui/material/Table';
 import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
+import Editor from './Editor';
+import type { components } from '../api.generated';
+import { SeriesTeam } from '../types';
 
 interface Props {
     size: string
     title?: string
-    series: series
+    series: SeriesTeam
     stats?: gameStats
-    hideActions?: boolean
+    hideSeriesLink?: boolean
+    users: components["schemas"]["User"][]
+    teams: components["schemas"]["Team"][]
+    handleUpdate: () => void
 }
 
 function GameSeries(props: Props) {
+    const [openEdit, setOpenEdit] = useState(false);
+
+    const handleClickOpenEdit = () => {
+        setOpenEdit(true);
+    };
+
+    const handleCloseEdit = (updated: boolean) => {
+        if (updated) {
+            props.handleUpdate();
+        }
+        setOpenEdit(false);
+    };
+
+
     let title = <></>;
     if (props.title) {
         title = (
@@ -57,38 +79,56 @@ function GameSeries(props: Props) {
         )
     }
 
-    let actions = (
-        <CardActions sx={{
-            padding: 0,
-        }}>
-            <Button href={`/series/${props.series.id}`}><BarChartIcon /></Button>
-        </CardActions>
-    );
-    if (props.hideActions) {
-        actions = <></>;
+    let cardActions = <></>;
+    let actionButtons = [];
+
+    if (!props.hideSeriesLink) {
+        actionButtons.push((
+            <Button href={`/series/${props.series.series.id}`} key='series'><BarChartIcon /></Button>
+        ));
+    }
+    // if has edit
+    actionButtons.push((
+        <Button onClick={handleClickOpenEdit} key='edit'><EditIcon /></Button>
+    ));
+
+    if (actionButtons.length !== 0) {
+        cardActions = (
+            <CardActions sx={{
+                padding: 0,
+            }}>
+                {actionButtons}
+            </CardActions>
+        );
     }
 
     return (
-        <Card variant='outlined'>
-            {title}
-            <CardContent sx={{
-                padding: 0,
-            }}>
-                <Grid container sx={{
-                    justifyContent: "center",
-                    alignItems: "center",
+        <>
+            <Card variant='outlined'>
+                {title}
+                <CardContent sx={{
+                    padding: 0,
                 }}>
-                    <Grid>
-                        <Team team={props.series.teamA} score={props.series.teamAScore} size={props.size} />
+                    <Grid container sx={{
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}>
+                        <Grid>
+                            <Team team={props.series.firstTeam} score={props.series.series.firstTeamScore} size={props.size} />
+                        </Grid>
+                        {stats}
+                        <Grid>
+                            <Team team={props.series.secondTeam} score={props.series.series.secondTeamScore} size={props.size} />
+                        </Grid>
                     </Grid>
-                    {stats}
-                    <Grid>
-                        <Team team={props.series.teamB} score={props.series.teamBScore} size={props.size} />
-                    </Grid>
-                </Grid>
-            </CardContent>
-            {actions}
-        </Card>
+                </CardContent>
+                {cardActions}
+            </Card>
+            <Editor openEdit={openEdit} handleCloseEdit={(handleCloseEdit)}
+                series={props.series.series}
+                users={props.users}
+                teams={props.teams} />
+        </>
     );
 }
 

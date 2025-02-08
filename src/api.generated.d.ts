@@ -17,7 +17,11 @@ export interface paths {
          */
         get: operations["getUsers"];
         put?: never;
-        post?: never;
+        /**
+         * Create user
+         * @description Create a user
+         */
+        post: operations["createUser"];
         delete?: never;
         options?: never;
         head?: never;
@@ -37,7 +41,11 @@ export interface paths {
          */
         get: operations["getTeams"];
         put?: never;
-        post?: never;
+        /**
+         * Create team
+         * @description Create a team
+         */
+        post: operations["createTeam"];
         delete?: never;
         options?: never;
         head?: never;
@@ -104,6 +112,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create series
+         * @description Create a series
+         */
+        post: operations["createSeries"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/series/{seriesId}": {
         parameters: {
             query?: never;
@@ -116,8 +144,32 @@ export interface paths {
          * @description Returns a list of series by ID.
          */
         get: operations["getSeriesById"];
-        put?: never;
+        /**
+         * Update series
+         * @description Update an existing series
+         */
+        put: operations["updateSeriesById"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create game
+         * @description Create a game
+         */
+        post: operations["createGame"];
         delete?: never;
         options?: never;
         head?: never;
@@ -136,7 +188,11 @@ export interface paths {
          * @description Returns a game by ID.
          */
         get: operations["getGameById"];
-        put?: never;
+        /**
+         * Update an existing game
+         * @description Update an existing game
+         */
+        put: operations["updateGameById"];
         post?: never;
         delete?: never;
         options?: never;
@@ -255,6 +311,35 @@ export interface operations {
             500: components["responses"]["ServerError"];
         };
     };
+    createUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Create a new user */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["User"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: components["schemas"]["User"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            500: components["responses"]["ServerError"];
+        };
+    };
     getTeams: {
         parameters: {
             query?: never;
@@ -272,6 +357,35 @@ export interface operations {
                 content: {
                     "application/json": {
                         teams: components["schemas"]["Team"][];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    createTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Create a new team */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Team"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        team: components["schemas"]["Team"];
                     };
                 };
             };
@@ -308,7 +422,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description ID of tournament to return */
+                /** @description ID of tournament */
                 tournamentId: string;
             };
             cookie?: never;
@@ -335,7 +449,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description ID of tournament to return */
+                /** @description ID of tournament */
                 tournamentId: string;
             };
             cookie?: never;
@@ -357,12 +471,41 @@ export interface operations {
             500: components["responses"]["ServerError"];
         };
     };
+    createSeries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Create a new series */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Series"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        series: components["schemas"]["Series"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            500: components["responses"]["ServerError"];
+        };
+    };
     getSeriesById: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description ID of series to return */
+                /** @description ID of series */
                 seriesId: string;
             };
             cookie?: never;
@@ -385,17 +528,110 @@ export interface operations {
             500: components["responses"]["ServerError"];
         };
     };
+    updateSeriesById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of series */
+                seriesId: string;
+            };
+            cookie?: never;
+        };
+        /** @description Update an existing series */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Series"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        series: components["schemas"]["Series"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    createGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Create a new game */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Game"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        game: components["schemas"]["Game"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            500: components["responses"]["ServerError"];
+        };
+    };
     getGameById: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description ID of game to return */
+                /** @description ID of game */
                 gameId: string;
             };
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        game: components["schemas"]["Game"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    updateGameById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of game */
+                gameId: string;
+            };
+            cookie?: never;
+        };
+        /** @description Update an existing game */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Game"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

@@ -1,22 +1,22 @@
 import Grid from '@mui/material/Grid2';
-import { team } from '../types';
 import Paper from '@mui/material/Paper';
 import { Typography } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
+import { TeamUser } from '../types';
 
 interface Props {
     size: string,
-    team: team,
+    team: TeamUser,
     score?: number,
 }
 
 function Team(props: Props) {
     let logo = (
-        <Avatar variant="square" sx={{ objectFit: 'scale-down', height: "40px", width: "60px" }}>{props.team.name === 'TBD' ? '?' : props.team.name}</Avatar>
+        <Avatar variant="square" sx={{ objectFit: 'scale-down', height: "40px", width: "60px" }}>{props.team.team.slug === 'TBD' ? '?' : props.team.team.slug}</Avatar>
     );
-    if (props.team.logo) {
+    if (false) { // TODO implement logo URLs
         logo = (
-            <Avatar variant="square" alt={props.team.name} src={props.team.logo} sx={{ objectFit: 'scale-down', height: "40px", width: "60px" }} />
+            <Avatar variant="square" alt={props.team.team.slug} src={'TODO'} sx={{ objectFit: 'scale-down', height: "40px", width: "60px" }} />
         );
     }
     return (
@@ -33,7 +33,7 @@ function Team(props: Props) {
                         <Grid display="flex" justifyContent="center" alignItems="center">
                             <Typography variant="subtitle1" sx={{
                                 fontSize: props.size === 'lg' ? '3em' : '1em',
-                            }}>{props.score ?? '-'}</Typography>
+                            }}>{props.score ?? 0}</Typography>
                         </Grid>
                         <Grid sx={{
                             paddingLeft: '.5em',
@@ -41,8 +41,8 @@ function Team(props: Props) {
                             flexDirection: "column",
                             justifyContent: "center"
                         }}>
-                            <Typography variant="h6">{props.team.name}</Typography>
-                            <Typography variant="subtitle1">{props.team.coach}</Typography>
+                            <Typography variant="h6">{props.team.team.slug}</Typography>
+                            <Typography variant="subtitle1">{props.team.user.shortname}</Typography>
                         </Grid>
                     </Grid>
                 </Grid>
