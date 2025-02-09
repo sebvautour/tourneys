@@ -18,9 +18,10 @@ function App() {
   const [teams, setTeams] = useState(undefined as components["schemas"]["Team"][] | undefined);
   const [authToken, setAuthToken] = useState<string | null>(null);
 
+  const frontendURL = URL.parse(document.location.href);
   const authConfig: ZitadelConfig = {
-    redirect_uri: "http://localhost:5173/callback",
-    post_logout_redirect_uri: "http://localhost:5173/",
+    redirect_uri: `${frontendURL?.protocol ?? 'https'}//${frontendURL?.host}/callback`,
+    post_logout_redirect_uri: `${frontendURL?.protocol ?? 'https'}//${frontendURL?.host}/`,
     authority: import.meta.env.API_AUTH_AUTHORITY ?? "https://auth.svtr.dev/",
     client_id: import.meta.env.API_AUTH_CLIENT_ID ?? "306286739092209823@web_apps",
     scope: 'openid profile email urn:zitadel:iam:org:project:id:306286274380038303:aud'
@@ -35,10 +36,9 @@ function App() {
     zitadel.signout();
   }
 
-
   useEffect(() => {
     zitadel.userManager.getUser().then((user) => {
-      if (user) {
+      if (user && !user.expired) {
         setAuthToken(user.access_token ?? null);
       } else {
         setAuthToken(null);
