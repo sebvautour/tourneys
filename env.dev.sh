@@ -1,0 +1,5 @@
+export TOURNEYS_LISTEN_ADDR="localhost:8080"
+export TOURNEYS_AUTH_DOMAIN="auth.svtr.dev"
+export TOURNEYS_AUTH_KEY_PATH="./keys.json"
+export TOURNEYS_FRONTEND_AUTH_CLIENT_ID="306286739092209823@web_apps"
+export TOURNEYS_FRONTEND_AUTH_SCOPE="openid profile email urn:zitadel:iam:org:project:id:306286274380038303:aud"

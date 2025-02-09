@@ -19,6 +19,8 @@ tags:
     description: Operations about users
   - name: Teams
     description: Operations about teams
+  - name: Frontend
+    description: Operations used by the frontend
 
 paths:
   /users:
@@ -465,8 +467,43 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
+  /params:
+    get:
+      tags:
+        - Frontend
+      summary: Get frontend params
+      description: Get parameters used by the frontend
+      operationId: getFrontendParams
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  params:
+                    $ref: "#/components/schemas/FrontendParams"
+                required: ["params"]
+
+        "500":
+          $ref: "#/components/responses/ServerError"
+
 components:
   schemas:
+    FrontendParams:
+      type: object
+      properties:
+        authAuthority:
+          type: string
+        authClientId:
+          type: string
+        authScope:
+          type: string
+      required:
+        - authAuthority
+        - authClientId
+        - authScope
     Error:
       type: object
       properties:

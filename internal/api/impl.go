@@ -26,14 +26,18 @@ type DB interface {
 }
 
 type Server struct {
-	db DB
+	db             DB
+	frontendParams FrontendParams
 }
 
 // assert that Server implements the generated StrictServerInterface
 var _ StrictServerInterface = (*Server)(nil)
 
-func NewServer(db DB) ServerInterface {
-	s := Server{db: db}
+func NewServer(db DB, frontendParams FrontendParams) ServerInterface {
+	s := Server{
+		db:             db,
+		frontendParams: frontendParams,
+	}
 
 	return NewStrictHandlerWithOptions(s, []StrictMiddlewareFunc{}, StrictHTTPServerOptions{
 		RequestErrorHandlerFunc:  s.RequestErrorHandlerFunc,
@@ -211,5 +215,11 @@ func (s Server) GetUsers(ctx context.Context, request GetUsersRequestObject) (Ge
 	}
 	return GetUsers200JSONResponse{
 		Users: res,
+	}, nil
+}
+
+func (s Server) GetFrontendParams(ctx context.Context, _ GetFrontendParamsRequestObject) (GetFrontendParamsResponseObject, error) {
+	return GetFrontendParams200JSONResponse{
+		Params: s.frontendParams,
 	}, nil
 }

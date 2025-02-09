@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"reflect"
 
 	"github.com/rs/cors"
 	"github.com/sebvautour/tourneys"
@@ -15,16 +17,47 @@ import (
 	"github.com/zitadel/zitadel-go/v3/pkg/zitadel"
 )
 
-const (
-	// TODO: paramethise these
-	authDomain  = "auth.svtr.dev"
-	authKeyPath = "./keys.json"
-)
+type Params struct {
+	ListenAddr           string `env:"TOURNEYS_LISTEN_ADDR"`
+	AuthDomain           string `env:"TOURNEYS_AUTH_DOMAIN"`
+	AuthKeyPath          string `env:"TOURNEYS_AUTH_KEY_PATH"`
+	FrontendAuthClientID string `env:"TOURNEYS_FRONTEND_AUTH_CLIENT_ID"`
+	FrontendAuthScope    string `env:"TOURNEYS_FRONTEND_AUTH_SCOPE"`
+}
+
+// Parse uses env tags defined in the Params struct fields
+// to lookup environment vars to fill the values
+func (p *Params) Parse() error {
+	t := reflect.TypeOf(*p)
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+
+		envName := field.Tag.Get("env")
+		envValue, ok := os.LookupEnv(envName)
+		if !ok {
+			return fmt.Errorf("missing %s env var", envName)
+		}
+
+		fieldValue := reflect.Indirect(reflect.ValueOf(p)).FieldByName(field.Name)
+
+		if fieldValue.Kind() != reflect.String {
+			return fmt.Errorf("params field %s is not a string", field.Name)
+		}
+
+		fieldValue.SetString(envValue)
+	}
+	return nil
+}
 
 func main() {
 	ctx := context.Background()
 
-	apiHandler, err := createAPI(ctx)
+	var params Params
+	if err := params.Parse(); err != nil {
+		log.Fatalln(err)
+	}
+
+	apiHandler, err := createAPI(ctx, params)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -35,19 +68,19 @@ func main() {
 
 	webserver := &http.Server{
 		Handler: globalMux,
-		Addr:    "0.0.0.0:8080",
+		Addr:    params.ListenAddr,
 	}
 
 	log.Fatalln(webserver.ListenAndServe())
 }
 
-func createAPI(ctx context.Context) (http.Handler, error) {
+func createAPI(ctx context.Context, params Params) (http.Handler, error) {
 	dbClient, err := db.New(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create db: %s", err)
 	}
 
-	auth, err := authorization.New(ctx, zitadel.New(authDomain), oauth.DefaultAuthorization(authKeyPath))
+	auth, err := authorization.New(ctx, zitadel.New(params.AuthDomain), oauth.DefaultAuthorization(params.AuthKeyPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create auth: %s", err)
 	}
@@ -62,7 +95,11 @@ func createAPI(ctx context.Context) (http.Handler, error) {
 
 	createTestData(ctx, dbClient)
 
-	apiServer := api.NewServer(dbClient)
+	apiServer := api.NewServer(dbClient, api.FrontendParams{
+		AuthAuthority: fmt.Sprintf("https://%s/", params.AuthDomain),
+		AuthClientId:  params.FrontendAuthClientID,
+		AuthScope:     params.FrontendAuthScope,
+	})
 
 	mux := http.NewServeMux()
 

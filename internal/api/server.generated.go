@@ -33,6 +33,13 @@ type Error struct {
 	Message string `json:"message"`
 }
 
+// FrontendParams defines model for FrontendParams.
+type FrontendParams struct {
+	AuthAuthority string `json:"authAuthority"`
+	AuthClientId  string `json:"authClientId"`
+	AuthScope     string `json:"authScope"`
+}
+
 // Game defines model for Game.
 type Game struct {
 	AwayTeamId     uuid.UUID `json:"awayTeamId,omitempty"`
@@ -118,6 +125,9 @@ type ServerInterface interface {
 	// Update an existing game
 	// (PUT /games/{gameId})
 	UpdateGameById(w http.ResponseWriter, r *http.Request, gameId uuid.UUID)
+	// Get frontend params
+	// (GET /params)
+	GetFrontendParams(w http.ResponseWriter, r *http.Request)
 	// Create series
 	// (POST /series)
 	CreateSeries(w http.ResponseWriter, r *http.Request)
@@ -226,6 +236,20 @@ func (siw *ServerInterfaceWrapper) UpdateGameById(w http.ResponseWriter, r *http
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdateGameById(w, r, gameId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetFrontendParams operation middleware
+func (siw *ServerInterfaceWrapper) GetFrontendParams(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetFrontendParams(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -566,6 +590,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc("POST "+options.BaseURL+"/games", wrapper.CreateGame)
 	m.HandleFunc("GET "+options.BaseURL+"/games/{gameId}", wrapper.GetGameById)
 	m.HandleFunc("PUT "+options.BaseURL+"/games/{gameId}", wrapper.UpdateGameById)
+	m.HandleFunc("GET "+options.BaseURL+"/params", wrapper.GetFrontendParams)
 	m.HandleFunc("POST "+options.BaseURL+"/series", wrapper.CreateSeries)
 	m.HandleFunc("GET "+options.BaseURL+"/series/{seriesId}", wrapper.GetSeriesById)
 	m.HandleFunc("PUT "+options.BaseURL+"/series/{seriesId}", wrapper.UpdateSeriesById)
@@ -710,6 +735,33 @@ func (response UpdateGameById401JSONResponse) VisitUpdateGameByIdResponse(w http
 type UpdateGameById500JSONResponse struct{ ServerErrorJSONResponse }
 
 func (response UpdateGameById500JSONResponse) VisitUpdateGameByIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFrontendParamsRequestObject struct {
+}
+
+type GetFrontendParamsResponseObject interface {
+	VisitGetFrontendParamsResponse(w http.ResponseWriter) error
+}
+
+type GetFrontendParams200JSONResponse struct {
+	Params FrontendParams `json:"params"`
+}
+
+func (response GetFrontendParams200JSONResponse) VisitGetFrontendParamsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFrontendParams500JSONResponse struct{ ServerErrorJSONResponse }
+
+func (response GetFrontendParams500JSONResponse) VisitGetFrontendParamsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -1132,6 +1184,9 @@ type StrictServerInterface interface {
 	// Update an existing game
 	// (PUT /games/{gameId})
 	UpdateGameById(ctx context.Context, request UpdateGameByIdRequestObject) (UpdateGameByIdResponseObject, error)
+	// Get frontend params
+	// (GET /params)
+	GetFrontendParams(ctx context.Context, request GetFrontendParamsRequestObject) (GetFrontendParamsResponseObject, error)
 	// Create series
 	// (POST /series)
 	CreateSeries(ctx context.Context, request CreateSeriesRequestObject) (CreateSeriesResponseObject, error)
@@ -1276,6 +1331,30 @@ func (sh *strictHandler) UpdateGameById(w http.ResponseWriter, r *http.Request, 
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UpdateGameByIdResponseObject); ok {
 		if err := validResponse.VisitUpdateGameByIdResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetFrontendParams operation middleware
+func (sh *strictHandler) GetFrontendParams(w http.ResponseWriter, r *http.Request) {
+	var request GetFrontendParamsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetFrontendParams(ctx, request.(GetFrontendParamsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetFrontendParams")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetFrontendParamsResponseObject); ok {
+		if err := validResponse.VisitGetFrontendParamsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -1562,32 +1641,34 @@ func (sh *strictHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"m81/AQAA//+U/j+O/jUAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
