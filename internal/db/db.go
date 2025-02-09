@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/glebarez/sqlite"
 	"github.com/google/uuid"
 	"github.com/sebvautour/tourneys/internal/api"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
