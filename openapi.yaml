@@ -5,6 +5,8 @@ info:
   version: 0.1.0
 
 servers:
+  - url: "https://tourneys.svtr.dev/api/v1"
+    description: production deployment
   - url: "http://localhost:8080/api/v1"
     description: local development testing
 
