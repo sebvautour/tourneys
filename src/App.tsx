@@ -8,14 +8,43 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import type { components } from './api.generated';
-import { tournament } from './types.ts'
 import apiClient from './apiClient.ts'
+import { createZitadelAuth, ZitadelConfig } from "@zitadel/react";
+import LoginCallback from './LoginCallback.tsx'
 
 function App() {
-  const [selectedTournament, setSelectedTournament] = useState(undefined as tournament | undefined);
+  const [selectedTournament, setSelectedTournament] = useState(undefined as components["schemas"]["Tournament"] | undefined);
   const [users, setUsers] = useState(undefined as components["schemas"]["User"][] | undefined);
   const [teams, setTeams] = useState(undefined as components["schemas"]["Team"][] | undefined);
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
+  const authConfig: ZitadelConfig = {
+    redirect_uri: "http://localhost:5173/callback",
+    post_logout_redirect_uri: "http://localhost:5173/",
+    authority: import.meta.env.API_AUTH_AUTHORITY ?? "https://auth.svtr.dev/",
+    client_id: import.meta.env.API_AUTH_CLIENT_ID ?? "306286739092209823@web_apps",
+    scope: 'openid profile email urn:zitadel:iam:org:project:id:306286274380038303:aud'
+  };
+  const zitadel = createZitadelAuth(authConfig);
+
+  function login() {
+    zitadel.authorize();
+  }
+
+  function logout() {
+    zitadel.signout();
+  }
+
+
+  useEffect(() => {
+    zitadel.userManager.getUser().then((user) => {
+      if (user) {
+        setAuthToken(user.access_token ?? null);
+      } else {
+        setAuthToken(null);
+      }
+    });
+  }, [zitadel]);
 
   const client = apiClient;
 
@@ -55,17 +84,29 @@ function App() {
 
   let content = (
     <>
-      <Nav tournamentName={selectedTournament?.name ?? ''} />
+      <Nav
+        tournamentName={selectedTournament?.name ?? ''}
+        authenticated={authToken}
+        handleLogin={login}
+        handleLogout={logout}
+      />
       <BrowserRouter>
         <Routes>
           <Route index element={<Overview
             tournamentId={selectedTournament?.id ?? ''}
             users={users ?? []}
             teams={teams ?? []}
+            authToken={authToken}
           />} />
           <Route path="series/:seriesId" element={<Series
             users={users ?? []}
-            teams={teams ?? []} />} />
+            teams={teams ?? []}
+            authToken={authToken} />} />
+          <Route path="callback" element={<LoginCallback
+            authenticated={authToken}
+            setAuth={setAuthToken}
+            userManager={zitadel.userManager}
+          />} />
         </Routes>
       </BrowserRouter>
     </>

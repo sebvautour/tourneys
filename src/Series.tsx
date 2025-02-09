@@ -17,6 +17,7 @@ import { unknownTeam, unknownUser } from './types';
 export interface Props {
   users: components["schemas"]["User"][]
   teams: components["schemas"]["Team"][]
+  authToken: string | null
 }
 
 export default function Series(props: Props) {
@@ -63,6 +64,7 @@ export default function Series(props: Props) {
         users={props.users}
         teams={props.teams}
         handleUpdate={fetchSeries}
+        authToken={props.authToken}
       />
       <TableContainer component={Paper}>
         <Typography variant="h6" sx={{ paddingLeft: '.5em', paddingTop: '.5em' }}>Games</Typography>

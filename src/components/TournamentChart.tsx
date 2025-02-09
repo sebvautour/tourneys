@@ -12,6 +12,7 @@ export interface Props {
     tournamentId: string
     users: components["schemas"]["User"][]
     teams: components["schemas"]["Team"][]
+    authToken: string | null
 }
 
 function TournamentChart(props: Props) {
@@ -69,7 +70,8 @@ function TournamentChart(props: Props) {
                             <GameSeries series={series} size="sm"
                                 users={props.users}
                                 teams={props.teams}
-                                handleUpdate={fetchSeries} />
+                                handleUpdate={fetchSeries}
+                                authToken={props.authToken} />
                         </Grid>
                     ))}
                 </Grid>

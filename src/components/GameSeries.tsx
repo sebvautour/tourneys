@@ -25,6 +25,7 @@ interface Props {
     users: components["schemas"]["User"][]
     teams: components["schemas"]["Team"][]
     handleUpdate: () => void
+    authToken: string | null
 }
 
 function GameSeries(props: Props) {
@@ -87,10 +88,11 @@ function GameSeries(props: Props) {
             <Button href={`/series/${props.series.series.id}`} key='series'><BarChartIcon /></Button>
         ));
     }
-    // if has edit
-    actionButtons.push((
-        <Button onClick={handleClickOpenEdit} key='edit'><EditIcon /></Button>
-    ));
+    if (props.authToken) {
+        actionButtons.push((
+            <Button onClick={handleClickOpenEdit} key='edit'><EditIcon /></Button>
+        ));
+    }
 
     if (actionButtons.length !== 0) {
         cardActions = (
@@ -127,7 +129,8 @@ function GameSeries(props: Props) {
             <Editor openEdit={openEdit} handleCloseEdit={(handleCloseEdit)}
                 series={props.series.series}
                 users={props.users}
-                teams={props.teams} />
+                teams={props.teams}
+                authToken={props.authToken} />
         </>
     );
 }

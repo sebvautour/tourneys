@@ -33,6 +33,7 @@ interface Props {
     series: components["schemas"]["Series"]
     users: components["schemas"]["User"][]
     teams: components["schemas"]["Team"][]
+    authToken: string | null
 }
 
 function Editor(props: Props) {
@@ -55,6 +56,9 @@ function Editor(props: Props) {
 
     const handleSave = (async () => {
         const { error } = await apiClient.PUT('/series/{seriesId}', {
+            headers: {
+                Authorization: `Bearer ${props.authToken}`
+            },
             params: {
                 path: { seriesId: series?.id ?? '' },
             },
