@@ -24,14 +24,32 @@ const (
 func main() {
 	ctx := context.Background()
 
+	apiHandler, err := createAPI(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	globalMux := http.NewServeMux()
+	globalMux.Handle("/api/v1/", apiHandler)
+	globalMux.Handle("/", tourneys.FrontendFiles{})
+
+	webserver := &http.Server{
+		Handler: globalMux,
+		Addr:    "0.0.0.0:8080",
+	}
+
+	log.Fatalln(webserver.ListenAndServe())
+}
+
+func createAPI(ctx context.Context) (http.Handler, error) {
 	dbClient, err := db.New(ctx)
 	if err != nil {
-		log.Fatalf("failed to create db: %s\n", err)
+		return nil, fmt.Errorf("failed to create db: %s", err)
 	}
 
 	auth, err := authorization.New(ctx, zitadel.New(authDomain), oauth.DefaultAuthorization(authKeyPath))
 	if err != nil {
-		log.Fatalf("failed to create auth: %s\n", err)
+		return nil, fmt.Errorf("failed to create auth: %s", err)
 	}
 
 	authMW, err := api.AuthMiddleware(func(ctx context.Context, token string) error {
@@ -39,7 +57,7 @@ func main() {
 		return err
 	})
 	if err != nil {
-		log.Fatalf("failed to create auth middleware: %s\n", err)
+		return nil, fmt.Errorf("failed to create auth middleware: %s", err)
 	}
 
 	createTestData(ctx, dbClient)
@@ -48,18 +66,9 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.Handle("/", tourneys.FrontendFiles{})
-
 	api.HandlerFromMuxWithBaseURL(apiServer, mux, "/api/v1")
 
-	mux.HandleFunc("/ping", func(w http.ResponseWriter, _ *http.Request) {
-		w.Write([]byte("pong"))
-	})
-
-	var handlerWithMidlewares http.Handler
-
-	handlerWithMidlewares = authMW(mux)
-
+	handlerWithMidlewares := authMW(mux)
 	handlerWithMidlewares = cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost},
@@ -69,12 +78,7 @@ func main() {
 		},
 	}).Handler(handlerWithMidlewares)
 
-	webserver := &http.Server{
-		Handler: handlerWithMidlewares,
-		Addr:    "0.0.0.0:8080",
-	}
-
-	log.Fatalln(webserver.ListenAndServe())
+	return handlerWithMidlewares, nil
 }
 
 func createTestData(ctx context.Context, dbClient *db.DB) {
