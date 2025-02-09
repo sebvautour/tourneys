@@ -12,7 +12,39 @@ import apiClient from './apiClient.ts'
 import { createZitadelAuth, ZitadelConfig } from "@zitadel/react";
 import LoginCallback from './LoginCallback.tsx'
 
-function App() {
+export default function AppParams() {
+  const [params, setParams] = useState(null as components["schemas"]["FrontendParams"] | null);
+
+  const fetchParams = async () => {
+    const { data, error } = await apiClient.GET("/params", {});
+    if (error) {
+      console.log(error);
+      return;
+    }
+    setParams(data.params)
+  }
+
+  useEffect(() => {
+    fetchParams()
+  }, []);
+
+  let content = <></>
+  if (params !== null) {
+    content = <App params={params} />
+  }
+
+  return (
+    <>
+      {content}
+    </>
+  )
+}
+
+interface Props {
+  params: components["schemas"]["FrontendParams"]
+}
+
+function App(props: Props) {
   const [selectedTournament, setSelectedTournament] = useState(undefined as components["schemas"]["Tournament"] | undefined);
   const [users, setUsers] = useState(undefined as components["schemas"]["User"][] | undefined);
   const [teams, setTeams] = useState(undefined as components["schemas"]["Team"][] | undefined);
@@ -22,9 +54,9 @@ function App() {
   const authConfig: ZitadelConfig = {
     redirect_uri: `${frontendURL?.protocol ?? 'https'}//${frontendURL?.host}/callback`,
     post_logout_redirect_uri: `${frontendURL?.protocol ?? 'https'}//${frontendURL?.host}/`,
-    authority: import.meta.env.API_AUTH_AUTHORITY ?? "https://auth.svtr.dev/",
-    client_id: import.meta.env.API_AUTH_CLIENT_ID ?? "306286739092209823@web_apps",
-    scope: 'openid profile email urn:zitadel:iam:org:project:id:306286274380038303:aud'
+    authority: props.params.authAuthority,
+    client_id: props.params.authClientId,
+    scope: props.params.authScope,
   };
   const zitadel = createZitadelAuth(authConfig);
 
@@ -134,5 +166,3 @@ function App() {
     </>
   )
 }
-
-export default App
