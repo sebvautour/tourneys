@@ -6,14 +6,25 @@
 package api
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"path"
+	"strings"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	uuid "github.com/google/uuid"
 	"github.com/oapi-codegen/runtime"
 	strictnethttp "github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
+)
+
+const (
+	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
 // Error defines model for Error.
@@ -74,6 +85,9 @@ type BadRequest = Error
 
 // ServerError defines model for ServerError.
 type ServerError = Error
+
+// Unauthorized defines model for Unauthorized.
+type Unauthorized = Error
 
 // CreateGameJSONRequestBody defines body for CreateGame for application/json ContentType.
 type CreateGameJSONRequestBody = Game
@@ -148,6 +162,12 @@ type MiddlewareFunc func(http.Handler) http.Handler
 // CreateGame operation middleware
 func (siw *ServerInterfaceWrapper) CreateGame(w http.ResponseWriter, r *http.Request) {
 
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateGame(w, r)
 	}))
@@ -198,6 +218,12 @@ func (siw *ServerInterfaceWrapper) UpdateGameById(w http.ResponseWriter, r *http
 		return
 	}
 
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdateGameById(w, r, gameId)
 	}))
@@ -211,6 +237,12 @@ func (siw *ServerInterfaceWrapper) UpdateGameById(w http.ResponseWriter, r *http
 
 // CreateSeries operation middleware
 func (siw *ServerInterfaceWrapper) CreateSeries(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateSeries(w, r)
@@ -262,6 +294,12 @@ func (siw *ServerInterfaceWrapper) UpdateSeriesById(w http.ResponseWriter, r *ht
 		return
 	}
 
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdateSeriesById(w, r, seriesId)
 	}))
@@ -289,6 +327,12 @@ func (siw *ServerInterfaceWrapper) GetTeams(w http.ResponseWriter, r *http.Reque
 
 // CreateTeam operation middleware
 func (siw *ServerInterfaceWrapper) CreateTeam(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateTeam(w, r)
@@ -381,6 +425,12 @@ func (siw *ServerInterfaceWrapper) GetUsers(w http.ResponseWriter, r *http.Reque
 
 // CreateUser operation middleware
 func (siw *ServerInterfaceWrapper) CreateUser(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateUser(w, r)
@@ -534,6 +584,8 @@ type BadRequestJSONResponse Error
 
 type ServerErrorJSONResponse Error
 
+type UnauthorizedJSONResponse Error
+
 type CreateGameRequestObject struct {
 	Body *CreateGameJSONRequestBody
 }
@@ -558,6 +610,15 @@ type CreateGame400JSONResponse struct{ BadRequestJSONResponse }
 func (response CreateGame400JSONResponse) VisitCreateGameResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateGame401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreateGame401JSONResponse) VisitCreateGameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -637,6 +698,15 @@ func (response UpdateGameById400JSONResponse) VisitUpdateGameByIdResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
+type UpdateGameById401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response UpdateGameById401JSONResponse) VisitUpdateGameByIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type UpdateGameById500JSONResponse struct{ ServerErrorJSONResponse }
 
 func (response UpdateGameById500JSONResponse) VisitUpdateGameByIdResponse(w http.ResponseWriter) error {
@@ -670,6 +740,15 @@ type CreateSeries400JSONResponse struct{ BadRequestJSONResponse }
 func (response CreateSeries400JSONResponse) VisitCreateSeriesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSeries401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreateSeries401JSONResponse) VisitCreateSeriesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -750,6 +829,15 @@ func (response UpdateSeriesById400JSONResponse) VisitUpdateSeriesByIdResponse(w 
 	return json.NewEncoder(w).Encode(response)
 }
 
+type UpdateSeriesById401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response UpdateSeriesById401JSONResponse) VisitUpdateSeriesByIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type UpdateSeriesById500JSONResponse struct{ ServerErrorJSONResponse }
 
 func (response UpdateSeriesById500JSONResponse) VisitUpdateSeriesByIdResponse(w http.ResponseWriter) error {
@@ -819,6 +907,15 @@ type CreateTeam400JSONResponse struct{ BadRequestJSONResponse }
 func (response CreateTeam400JSONResponse) VisitCreateTeamResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateTeam401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreateTeam401JSONResponse) VisitCreateTeamResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -1002,6 +1099,15 @@ type CreateUser400JSONResponse struct{ BadRequestJSONResponse }
 func (response CreateUser400JSONResponse) VisitCreateUserResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateUser401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreateUser401JSONResponse) VisitCreateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -1451,4 +1557,107 @@ func (sh *strictHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	} else if response != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
 	}
+}
+
+// Base64 encoded, gzipped, json marshaled Swagger object
+var swaggerSpec = []string{
+
+	"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",
+}
+
+// GetSwagger returns the content of the embedded swagger specification file
+// or error if failed to decode
+func decodeSpec() ([]byte, error) {
+	zipped, err := base64.StdEncoding.DecodeString(strings.Join(swaggerSpec, ""))
+	if err != nil {
+		return nil, fmt.Errorf("error base64 decoding spec: %w", err)
+	}
+	zr, err := gzip.NewReader(bytes.NewReader(zipped))
+	if err != nil {
+		return nil, fmt.Errorf("error decompressing spec: %w", err)
+	}
+	var buf bytes.Buffer
+	_, err = buf.ReadFrom(zr)
+	if err != nil {
+		return nil, fmt.Errorf("error decompressing spec: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
+var rawSpec = decodeSpecCached()
+
+// a naive cached of a decoded swagger spec
+func decodeSpecCached() func() ([]byte, error) {
+	data, err := decodeSpec()
+	return func() ([]byte, error) {
+		return data, err
+	}
+}
+
+// Constructs a synthetic filesystem for resolving external references when loading openapi specifications.
+func PathToRawSpec(pathToFile string) map[string]func() ([]byte, error) {
+	res := make(map[string]func() ([]byte, error))
+	if len(pathToFile) > 0 {
+		res[pathToFile] = rawSpec
+	}
+
+	return res
+}
+
+// GetSwagger returns the Swagger specification corresponding to the generated code
+// in this file. The external references of Swagger specification are resolved.
+// The logic of resolving external references is tightly connected to "import-mapping" feature.
+// Externally referenced files must be embedded in the corresponding golang packages.
+// Urls can be supported but this task was out of the scope.
+func GetSwagger() (swagger *openapi3.T, err error) {
+	resolvePath := PathToRawSpec("")
+
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	loader.ReadFromURIFunc = func(loader *openapi3.Loader, url *url.URL) ([]byte, error) {
+		pathToFile := url.String()
+		pathToFile = path.Clean(pathToFile)
+		getSpec, ok := resolvePath[pathToFile]
+		if !ok {
+			err1 := fmt.Errorf("path not found: %s", pathToFile)
+			return nil, err1
+		}
+		return getSpec()
+	}
+	var specData []byte
+	specData, err = rawSpec()
+	if err != nil {
+		return
+	}
+	swagger, err = loader.LoadFromData(specData)
+	if err != nil {
+		return
+	}
+	return
 }

@@ -10,6 +10,15 @@ import (
 	"github.com/sebvautour/tourneys"
 	"github.com/sebvautour/tourneys/internal/api"
 	"github.com/sebvautour/tourneys/internal/db"
+	"github.com/zitadel/zitadel-go/v3/pkg/authorization"
+	"github.com/zitadel/zitadel-go/v3/pkg/authorization/oauth"
+	"github.com/zitadel/zitadel-go/v3/pkg/zitadel"
+)
+
+const (
+	// TODO: paramethise these
+	authDomain  = "auth.svtr.dev"
+	authKeyPath = "./keys.json"
 )
 
 func main() {
@@ -18,6 +27,19 @@ func main() {
 	dbClient, err := db.New(ctx)
 	if err != nil {
 		log.Fatalf("failed to create db: %s\n", err)
+	}
+
+	auth, err := authorization.New(ctx, zitadel.New(authDomain), oauth.DefaultAuthorization(authKeyPath))
+	if err != nil {
+		log.Fatalf("failed to create auth: %s\n", err)
+	}
+
+	authMW, err := api.AuthMiddleware(func(ctx context.Context, token string) error {
+		_, err := auth.CheckAuthorization(ctx, token)
+		return err
+	})
+	if err != nil {
+		log.Fatalf("failed to create auth middleware: %s\n", err)
 	}
 
 	createTestData(ctx, dbClient)
@@ -34,12 +56,22 @@ func main() {
 		w.Write([]byte("pong"))
 	})
 
+	var handlerWithMidlewares http.Handler
+
+	handlerWithMidlewares = authMW(mux)
+
+	handlerWithMidlewares = cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost},
+		AllowedHeaders: []string{
+			"Authorization",
+			"Content-Type",
+		},
+	}).Handler(handlerWithMidlewares)
+
 	webserver := &http.Server{
-		Handler: cors.New(cors.Options{
-			AllowedOrigins: []string{"*"},
-			AllowedMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost},
-		}).Handler(mux),
-		Addr: "0.0.0.0:8080",
+		Handler: handlerWithMidlewares,
+		Addr:    "0.0.0.0:8080",
 	}
 
 	log.Fatalln(webserver.ListenAndServe())

@@ -23,6 +23,8 @@ tags:
 paths:
   /users:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - Users
       summary: Create user
@@ -48,6 +50,8 @@ paths:
                 required: ["user"]
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -77,6 +81,8 @@ paths:
 
   /teams:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - Teams
       summary: Create team
@@ -102,6 +108,8 @@ paths:
                 required: ["team"]
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -230,6 +238,8 @@ paths:
 
   /series:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - Series
       summary: Create series
@@ -255,6 +265,8 @@ paths:
                 required: ["series"]
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -297,6 +309,8 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
     put:
+      security:
+        - BearerAuth: []
       tags:
         - Series
       summary: Update series
@@ -334,10 +348,14 @@ paths:
                 required: ["series"]
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "500":
           $ref: "#/components/responses/ServerError"
   /games:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - Games
       summary: Create game
@@ -363,6 +381,8 @@ paths:
                 required: ["game"]
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -401,6 +421,8 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
     put:
+      security:
+        - BearerAuth: []
       tags:
         - Games
       summary: Update an existing game
@@ -438,6 +460,8 @@ paths:
                 required: ["game"]
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -642,9 +666,20 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Missing or invalid auth token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     ServerError:
       description: A server error occurred
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
